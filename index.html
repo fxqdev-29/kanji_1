@@ -1,0 +1,521 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanji for Jessica</title>
+<style>
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #34364c;
+  background: #f8f8ff;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+header {
+  background: white;
+  border-bottom: 1px solid #e8e7f4;
+  padding: 22px max(20px, calc((100% - 1050px)/2));
+}
+h1 {
+  font-size: 26px;
+  margin: 0;
+  color: #7164a8;
+  font-weight: 700;
+}
+main {
+  max-width: 1050px;
+  margin: 26px auto;
+  padding: 0 18px;
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  gap: 18px;
+}
+.panel {
+  background: #fff;
+  border: 1px solid #e9e6f3;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 18px #5555770b;
+}
+h2 { font-size: 17px; margin: 0 0 14px; }
+p { line-height: 1.5; }
+textarea {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+  border: 1px solid #d8d5e8;
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  outline-color: #8c82c6;
+}
+button {
+  font: inherit;
+  border: 1px solid #d8d5e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #4b4766;
+  padding: 10px 13px;
+  cursor: pointer;
+}
+button:hover { background: #f4f1ff; }
+button.primary {
+  background: #a79ad7;
+  color: #fff;
+  border-color: #a79ad7;
+}
+button.primary:hover { background: #9586cc; }
+button:disabled { opacity: .4; cursor: default; }
+.row {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.space { justify-content: space-between; }
+.hint {
+  color: #85849a;
+  font-size: 13px;
+  margin: 8px 0;
+}
+.words {
+  max-height: 380px;
+  overflow: auto;
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.word {
+  width: 100%;
+  text-align: left;
+  border-color: transparent;
+  background: #f6f7ff;
+}
+.word.active {
+  background: #e9e5fa;
+  border-color: #d4cbf2;
+}
+.word small {
+  display: block;
+  color: #77778b;
+  margin-top: 4px;
+}
+.kanji-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 16px;
+}
+.kanji-tabs button {
+  font-size: 23px;
+  min-width: 52px;
+}
+.kanji-tabs .active {
+  background: #e5e1f8;
+  border-color: #bdb1e5;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(240px,1fr) minmax(240px,1fr);
+  gap: 16px;
+}
+.gridbox {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid #dcd9eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent calc(50% - .5px),
+      #e6e5ef calc(50% - .5px),
+      #e6e5ef calc(50% + .5px),
+      transparent calc(50% + .5px)),
+    linear-gradient(transparent calc(50% - .5px),
+      #e6e5ef calc(50% - .5px),
+      #e6e5ef calc(50% + .5px),
+      transparent calc(50% + .5px)),
+    white;
+}
+.gridbox svg, .gridbox canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.gridbox canvas {
+  touch-action: none;
+  cursor: crosshair;
+}
+.sectionlabel {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0 0 10px;
+}
+.controls { margin: 12px 0; }
+.status {
+  color: #77748c;
+  font-size: 13px;
+  min-height: 20px;
+}
+.empty {
+  color: #8c8b9e;
+  font-size: 14px;
+}
+@media(max-width:760px) {
+  main { grid-template-columns: 1fr; }
+  .workspace { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:500px) {
+  .workspace { grid-template-columns: 1fr; }
+  header { padding: 20px; }
+  .panel { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Kanji for Jessica</h1>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>My vocabulary</h2>
+    <textarea id="vocab" placeholder="Paste Japanese words here, one per line.&#10;学校&#10;先生&#10;日本語"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="primary" id="save">Save list</button>
+      <button id="clearList">Clear list</button>
+    </div>
+    <p class="hint">You can also write a meaning after a dash, like 学校 - school.</p>
+    <div id="words" class="words"></div>
+  </section>
+
+  <section class="panel">
+    <div class="row space">
+      <h2 style="margin:0">Stroke practice</h2>
+      <span id="position" class="hint"></span>
+    </div>
+    <div id="tabs" class="kanji-tabs"></div>
+
+    <div class="workspace">
+      <div>
+        <p class="sectionlabel">Stroke order</p>
+        <div class="gridbox">
+          <svg id="strokeSvg" viewBox="0 0 109 109" aria-label="Kanji stroke order"></svg>
+        </div>
+        <div class="row controls">
+          <button id="prev">← Previous</button>
+          <button id="next">Next →</button>
+          <button id="play">Play</button>
+          <button id="restart">Restart</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div>
+        <p class="sectionlabel">Write it yourself</p>
+        <div class="gridbox">
+          <svg id="guideSvg" viewBox="0 0 109 109"></svg>
+          <canvas id="drawCanvas"></canvas>
+        </div>
+        <div class="row controls">
+          <button id="trace">Trace</button>
+          <button id="write">Write without guide</button>
+          <button id="erase">Clear writing</button>
+        </div>
+        <div class="status">Use your mouse, finger or stylus.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="strokes.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  let items = [], selected = 0, character = 0, step = 0;
+  let playing = null, guide = true, painting = false, last = null;
+  const ns = 'http://www.w3.org/2000/svg';
+
+  function chars(s) {
+    return Array.from(s).filter(c => {
+      let n = c.codePointAt(0);
+      return (n >= 0x3400 && n <= 0x9fff) ||
+             (n >= 0xf900 && n <= 0xfaff) ||
+             (n >= 0x20000 && n <= 0x3134f);
+    });
+  }
+
+  function code(c) {
+    return c.codePointAt(0).toString(16).padStart(5, '0');
+  }
+
+  function current() {
+    return chars(items[selected]?.word || '')[character] || '';
+  }
+
+  function paths() {
+    return window.KANJI_STROKES?.[code(current())] || [];
+  }
+
+  function stop() {
+    if (playing) {
+      clearInterval(playing);
+      playing = null;
+    }
+    $('play').textContent = 'Play';
+  }
+
+  function parse(s) {
+    return s.split(/\r?\n/)
+      .map(x => x.trim())
+      .filter(Boolean)
+      .map(line => {
+        let m = line.match(/^(.+?)\s+[-–—:]\s+(.+)$/);
+        return {
+          word: (m ? m[1] : line).trim(),
+          meaning: m ? m[2].trim() : ''
+        };
+      })
+      .filter(x => chars(x.word).length);
+  }
+
+  function renderWords() {
+    $('words').replaceChildren();
+    items.forEach((x, i) => {
+      let b = document.createElement('button');
+      b.className = 'word' + (i === selected ? ' active' : '');
+      let title = document.createElement('span');
+      title.textContent = x.word;
+      b.append(title);
+      if (x.meaning) {
+        let sub = document.createElement('small');
+        sub.textContent = x.meaning;
+        b.append(sub);
+      }
+      b.onclick = () => {
+        selected = i;
+        character = 0;
+        step = 0;
+        stop();
+        clearCanvas();
+        render();
+      };
+      $('words').append(b);
+    });
+    if (!items.length) {
+      let p = document.createElement('p');
+      p.className = 'empty';
+      p.textContent = 'Add some vocabulary to get started.';
+      $('words').append(p);
+    }
+  }
+
+  function svgPaths(el, list, count, opacity = 1) {
+    el.replaceChildren();
+    list.slice(0, count).forEach(d => {
+      let p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', '#51477e');
+      p.setAttribute('stroke-width', '3.4');
+      p.setAttribute('stroke-linecap', 'round');
+      p.setAttribute('stroke-linejoin', 'round');
+      p.setAttribute('opacity', opacity);
+      el.append(p);
+    });
+  }
+
+  function fallback(el, c, opacity) {
+    el.replaceChildren();
+    if (!c) return;
+    let t = document.createElementNS(ns, 'text');
+    t.textContent = c;
+    t.setAttribute('x', '54.5');
+    t.setAttribute('y', '85');
+    t.setAttribute('font-size', '83');
+    t.setAttribute('font-family', 'serif');
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('fill', '#51477e');
+    t.setAttribute('opacity', opacity);
+    el.append(t);
+  }
+
+  function render() {
+    renderWords();
+    let arr = chars(items[selected]?.word || '');
+    if (character >= arr.length) character = 0;
+    let c = current(), list = paths();
+    $('tabs').replaceChildren();
+
+    arr.forEach((ch, i) => {
+      let b = document.createElement('button');
+      b.textContent = ch;
+      b.className = i === character ? 'active' : '';
+      b.onclick = () => {
+        character = i;
+        step = 0;
+        stop();
+        clearCanvas();
+        render();
+      };
+      $('tabs').append(b);
+    });
+
+    $('position').textContent = items.length ?
+      `${selected + 1} of ${items.length}` : '';
+
+    if (list.length) {
+      step = Math.min(step, list.length);
+      svgPaths($('strokeSvg'), list, step);
+      if (guide) svgPaths($('guideSvg'), list, list.length, .22);
+      else $('guideSvg').replaceChildren();
+      $('status').textContent = `${step} / ${list.length} strokes`;
+    } else {
+      fallback($('strokeSvg'), c, 1);
+      if (guide) fallback($('guideSvg'), c, .17);
+      else $('guideSvg').replaceChildren();
+      $('status').textContent = c ?
+        'Stroke order not available for this character.' :
+        'Choose a word to begin.';
+    }
+
+    $('prev').disabled = !list.length || step === 0;
+    $('next').disabled = !list.length || step === list.length;
+    $('play').disabled = !list.length;
+    $('restart').disabled = !list.length;
+  }
+
+  function clearCanvas() {
+    let c = $('drawCanvas');
+    c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  }
+
+  function resize() {
+    let c = $('drawCanvas'), r = c.getBoundingClientRect();
+    let old = document.createElement('canvas');
+    old.width = c.width;
+    old.height = c.height;
+    old.getContext('2d').drawImage(c, 0, 0);
+    c.width = Math.round(r.width * devicePixelRatio);
+    c.height = Math.round(r.height * devicePixelRatio);
+    c.getContext('2d').drawImage(old, 0, 0, c.width, c.height);
+  }
+
+  function point(e) {
+    let r = $('drawCanvas').getBoundingClientRect();
+    return [
+      (e.clientX - r.left) * $('drawCanvas').width / r.width,
+      (e.clientY - r.top) * $('drawCanvas').height / r.height
+    ];
+  }
+
+  let canvas = $('drawCanvas');
+
+  canvas.addEventListener('pointerdown', e => {
+    painting = true;
+    last = point(e);
+    canvas.setPointerCapture(e.pointerId);
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    if (!painting) return;
+    let now = point(e), ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(...last);
+    ctx.lineTo(...now);
+    ctx.lineWidth = Math.max(3, canvas.width / 90);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#9d90d6';
+    ctx.stroke();
+    last = now;
+  });
+
+  function end() {
+    painting = false;
+    last = null;
+  }
+
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+
+  $('save').onclick = () => {
+    items = parse($('vocab').value);
+    localStorage.setItem('jessica-vocab', $('vocab').value);
+    selected = 0;
+    character = 0;
+    step = 0;
+    stop();
+    clearCanvas();
+    render();
+  };
+
+  $('clearList').onclick = () => {
+    if (!confirm('Clear your vocabulary list?')) return;
+    $('vocab').value = '';
+    $('save').click();
+  };
+
+  $('prev').onclick = () => {
+    stop();
+    step = Math.max(0, step - 1);
+    render();
+  };
+
+  $('next').onclick = () => {
+    stop();
+    step = Math.min(paths().length, step + 1);
+    render();
+  };
+
+  $('restart').onclick = () => {
+    stop();
+    step = 0;
+    render();
+  };
+
+  $('play').onclick = () => {
+    if (playing) {
+      stop();
+      return;
+    }
+    if (!paths().length) return;
+    if (step >= paths().length) step = 0;
+    $('play').textContent = 'Pause';
+    playing = setInterval(() => {
+      step++;
+      render();
+      if (step >= paths().length) stop();
+      else $('play').textContent = 'Pause';
+    }, 650);
+  };
+
+  $('trace').onclick = () => {
+    guide = true;
+    render();
+  };
+
+  $('write').onclick = () => {
+    guide = false;
+    render();
+  };
+
+  $('erase').onclick = clearCanvas;
+  window.addEventListener('resize', resize);
+
+  $('vocab').value = localStorage.getItem('jessica-vocab') ||
+    '学校 - school\n先生 - teacher\n日本語 - Japanese\n愛 - love';
+
+  items = parse($('vocab').value);
+  resize();
+  render();
+})();
+</script>
+</body>
+</html>
